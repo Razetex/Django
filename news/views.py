@@ -9,9 +9,14 @@ from .forms import PostForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.core.mail import send_mail, mail_managers
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+# Ниже импорт для сигналов
+from django.db.models.signals import post_save, m2m_changed
+from django.dispatch import receiver, Signal
 # from .tasks import add_post_send_email
 # import django.dispatch
 
@@ -57,8 +62,11 @@ class Search(ListView):
     context['all_posts'] = Post.objects.all() # Для отображения общего кол-ва публикаций на сайте
     return context
 
+
+addpost = Signal()
+
 class CreatePost(PermissionRequiredMixin, CreateView):
-    permission_required = ('news.add_post',)
+    permission_required = ('main_app.add_post',)
     model = Post
     template_name = 'create_post.html'
     form_class = PostForm
@@ -74,7 +82,7 @@ class CreatePost(PermissionRequiredMixin, CreateView):
 
 
 class EditPost(PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
-  permission_required = ('news.change_post',)
+  permission_required = ('main_app.change_post',)
   template_name = 'edit_post.html'
   form_class = PostForm
 
@@ -117,10 +125,27 @@ def add_subscribe(request, pk):
     )
     return redirect(request.META.get('HTTP_REFERER'))
 
+
+@login_required
+def del_subscribe(request, pk):
+    category_object = PostCategory.objects.get(postThrough=pk)
+    category_object_name = category_object.categoryThrough
+    del_subscribe = Category.objects.get(name=category_object_name)
+    del_subscribe.subscribers = None
+    del_subscribe.save()
+    user = request.user
+
+    # Вариант 2. Используем для хранения списка подписавшихся пользователей встроенные в auth.models группы
+    category_group = Group.objects.get(name=category_object_name)
+    category_group.user_set.remove(user)
+
+    send_mail(
+        subject=f'News Portal: {category_object_name}',
+        message=f'Доброго дня, {request.user}! Вы отменили уведомления о выходе новых статей в категории {category_object_name}. Нам очень жаль, что данная категория Вам не понравилась, ждем Вас снова на нашем портале!',
+        from_email='newsportal272@gmail.com',
+        recipient_list=[user.email, ],
+    )
+    return redirect(request.META.get('HTTP_REFERER'))
+
 def logging_page(request):
     return render(request, 'logging_page.html')
-
-
-def test_error(request):
-    raise Exception
-    return HttpResponseRedirect(reverse('logging_page'))

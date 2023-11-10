@@ -23,7 +23,7 @@ class Author(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256, unique=True)
+    name = models.CharField(max_length=256, default='Uncategorized')
     subscribers = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     def __str__(self):
         return f'{self.name}'

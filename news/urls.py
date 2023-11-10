@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import NewsList, NewsItem, Search, CreatePost, EditPost, DeletePost, add_subscribe, logging_page
+from .views import NewsList, NewsItem, Search, CreatePost, EditPost, DeletePost, add_subscribe, del_subscribe, logging_page
 
 urlpatterns = [
   path('', NewsList.as_view()),
@@ -9,5 +9,6 @@ urlpatterns = [
   path('<int:pk>/edit', EditPost.as_view()),
   path('<int:pk>/delete', DeletePost.as_view()),
   path('<int:pk>/add_subscribe', add_subscribe),
+  path('<int:pk>/del_subscribe', del_subscribe),
   path('logging_page/', logging_page, name='logging_page'),
 ]
