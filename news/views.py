@@ -17,8 +17,8 @@ from django.core.mail import EmailMultiAlternatives
 # Ниже импорт для сигналов
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver, Signal
-# from .tasks import add_post_send_email
-# import django.dispatch
+from .tasks import add_post_send_email
+import django.dispatch
 
 
 
@@ -76,7 +76,7 @@ class CreatePost(PermissionRequiredMixin, CreateView):
         id = post.id
         a = form.cleaned_data['postCategory']
         category_object_name = str(a[0])
-        # add_post_send_email.delay(category=category_object_name, id=id)
+        add_post_send_email.delay(category=category_object_name, id=id)
         addpost.send(Post, instance=post, category=category_object_name)
         return redirect(f'/news/{id}')
 
@@ -119,8 +119,8 @@ def add_subscribe(request, pk):
 
     send_mail(
         subject=f'News Portal: {category_object_name}',
-        message=f'Доброго дня, {request.user}! Вы подписались на уведомления о выходе новых статей в категории {category_object_name}',
-        from_email='newsportal272@gmail.com',
+        message=f'Доброе утро/день/вечер, {request.user}! Вы подписались на уведомления о выходе новых статей в категории {category_object_name}',
+        from_email='news.portal2552@gmail.com',
         recipient_list=[user.email, ],
     )
     return redirect(request.META.get('HTTP_REFERER'))
@@ -141,8 +141,8 @@ def del_subscribe(request, pk):
 
     send_mail(
         subject=f'News Portal: {category_object_name}',
-        message=f'Доброго дня, {request.user}! Вы отменили уведомления о выходе новых статей в категории {category_object_name}. Нам очень жаль, что данная категория Вам не понравилась, ждем Вас снова на нашем портале!',
-        from_email='newsportal272@gmail.com',
+        message=f'Доброе утро/день/вечер, {request.user}! Вы подписались на уведомления о выходе новых статей в категории {category_object_name}',
+        from_email='news.portal2552@gmail.com',
         recipient_list=[user.email, ],
     )
     return redirect(request.META.get('HTTP_REFERER'))
