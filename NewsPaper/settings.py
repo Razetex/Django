@@ -47,10 +47,9 @@ INSTALLED_APPS = [
     'bootstrap4',
     'allauth',
     'allauth.account',
-    # 'allauth.socialaccount',
+    'allauth.socialaccount',
 
     'allauth.socialaccount.providers.google',
-    'jsonfield',
 ]
 
 EMAIL_HOST_USER = "news.portal2552@gmail.com"
@@ -69,7 +68,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'NewsPaper.urls'
@@ -168,17 +171,104 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-
 SITE_ID = 1
 
 LOGIN_URL = '/account/login/'
 LOGIN_REDIRECT_URL = '/'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'style' : '{',
+    'formatters': {
+        'cons_simple': {
+            'format': '%(asctime)s %(levelname)s %(message)s'},
+        'cons_warning':{
+            'format': '%(asctime)s %(levelname)s %(message)s %(pathname)s'},
+        'cons_error':{
+            'format': '%(asctime)s %(levelname)s %(message)s %(pathname)s %(exc_info)s'},
+        'general':{
+            'format': '%(asctime)s %(levelname)s %(module)s %(message)s'},
+        'error':{
+            'format': '%(asctime)s %(levelname)s %(message)s %(pathname)s %(exc_info)s'},
+        'security': {
+            'format': '%(asctime)s %(levelname)s %(module)s %(message)s'},
+        'email': {
+            'format': '%(asctime)s %(levelname)s %(message)s %(pathname)s'
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'},
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'},
+    },
+    'handlers': {
+        'cons_simple': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'cons_simple'},
+        'cons_warning': {
+            'level': 'WARNING',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'cons_warning'},
+        'cons_error': {
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'cons_error'},
+        'general':{
+            'level' : 'INFO',
+            'filters': ['require_debug_false'],
+            'class':'logging.FileHandler',
+            'filename': 'general.log',
+            'formatter': 'general'},
+        'error': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'errors.log',
+            'formatter': 'error'},
+        'security':{
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'security.log',
+            'formatter': 'security'},
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'email'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['cons_simple', 'cons_warning', 'cons_error', 'general'],
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['error', 'mail_admins'],
+            'propagate': True,
+        },
+        'django.server':{
+            'handlers': ['error', 'mail_admins'],
+            'propagate': True,
+        },
+        'django.template':{
+            'handlers': ['error'],
+            'propagate': True,
+        },
+        'django.db.backends':{
+            'handlers': ['error'],
+            'propagate': True,
+        },
+        'django.security':{
+            'handlers': ['security'],
+            'propagate': True,
+        }
+    }
+}
 
 
 
